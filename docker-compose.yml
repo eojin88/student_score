@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # 데이터베이스 (MySQL)
+  db:
+    image: mysql:8.4
+    container_name: midterm_mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci 
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./my.cnf:/etc/mysql/conf.d/my.cnf # 한글깨짐 방지 설정 
+      # init.sql을 도커 DB 초기화 폴더로 밀어넣음
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql 
+
+  # 백엔드 (Node.js API)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: midterm_backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+    # localhost 하면 에러남 도커는 격리 환경이라서 
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+    depends_on:
+      - db
+
+  # 프론트엔드 (화면)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: midterm_frontend
+    restart: always
+    ports:
+      - "3000:3000"   # 접속은 3000번
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
