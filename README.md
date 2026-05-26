@@ -1,7 +1,7 @@
 cmd 열고 wsl 
 
 -- 프로젝트 폴더로 이동 
-cd midterm_project 
+cd ...
 
 -- 도커 실행 
 docker compose up -d
